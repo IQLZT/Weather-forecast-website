@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>一家三口的云端情书</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  .bg-layer {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+  }
+
+  .bg-layer::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: #ffffff;
+    opacity: 1;
+  }
+
+  /* 自定义背景图片层（默认隐藏） */
+  .bg-layer.bg-image::before {
+    background: var(--custom-bg-image, #ffffff) center/cover no-repeat;
+    opacity: 0.35;
+  }
+
+  .bg-layer.bg-colored::before {
+    background: var(--custom-bg-color, #ffffff);
+    opacity: 1;
+  }
+
+  .bg-layer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(135, 180, 220, 0.25) 0%, rgba(200, 180, 210, 0.20) 50%, rgba(255, 220, 180, 0.20) 100%);
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    padding: 16px;
+  }
+
+  /* ---- 主卡片 ---- */
+  .main-card {
+    position: relative;
+    border-radius: 24px;
+    padding: 32px 24px 28px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+    text-align: center;
+    overflow: hidden;
+    z-index: 0;
+  }
+
+  .main-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.9);
+    z-index: -2;
+  }
+
+  .main-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: -1;
+  }
+
+  .main-card > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .title {
+    font-size: 22px;
+    font-weight: 600;
+    color: #4a5568;
+    letter-spacing: 4px;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-size: 12px;
+    color: #a0aec0;
+    letter-spacing: 2px;
+    margin-bottom: 24px;
+  }
+
+  /* ---- 天气主区域（左右布局） ---- */
+  .weather-row {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+    margin-bottom: 16px;
+  }
+
+  /* ---- 小福宝温馨提示（左侧） ---- */
+  .fubao-tip {
+    flex: 0 0 90px;
+    width: 90px;
+    background: linear-gradient(180deg, rgba(255, 245, 220, 0.75) 0%, rgba(255, 235, 200, 0.65) 100%);
+    border-radius: 16px;
+    padding: 12px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    border: 1px solid rgba(255, 200, 120, 0.3);
+    box-shadow: 0 2px 12px rgba(255, 180, 100, 0.12);
+    text-align: center;
+  }
+
+  .fubao-avatar {
+    font-size: 32px;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .fubao-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #d4956b;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    white-space: nowrap;
+  }
+
+  .fubao-text {
+    font-size: 11px;
+    color: #8b6914;
+    line-height: 1.6;
+    word-break: break-all;
+  }
+
+  /* ---- 天气内容（右侧） ---- */
+  .weather-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .weather-icon {
+    font-size: 56px;
+    line-height: 1;
+    margin-bottom: 4px;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.08));
+  }
+
+  .temperature {
+    font-size: 48px;
+    font-weight: 300;
+    color: #2d3748;
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+
+  .weather-desc {
+    font-size: 14px;
+    color: #718096;
+    margin-bottom: 10px;
+  }
+
+  /* ---- 天气详情 ---- */
+  .details-row {
+    display: flex;
+    justify-content: space-around;
+    gap: 6px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .detail-item {
+    flex: 1;
+    min-width: 60px;
+    background: transparent;
+    border-radius: 14px;
+    padding: 10px 4px;
+  }
+
+  .detail-label {
+    font-size: 10px;
+    color: #a0aec0;
+    margin-bottom: 3px;
+  }
+
+  .detail-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: #4a5568;
+  }
+
+  /* ---- 城市选择 ---- */
+  .city-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .city-input {
+    flex: 1;
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 14px;
+    background: rgba(255,255,255,0.6);
+    color: #4a5568;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .city-input:focus {
+    border-color: #90b8e0;
+  }
+
+  .city-btn {
+    background: rgba(255,255,255,0.7);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-size: 14px;
+    color: #4a5568;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+  }
+
+  .city-btn:active {
+    background: rgba(200,210,230,0.6);
+  }
+
+  .city-name {
+    font-size: 14px;
+    color: #718096;
+    margin-bottom: 14px;
+  }
+
+  /* ---- 天气播报按钮 ---- */
+  .speak-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.7);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 12px;
+    padding: 8px 16px;
+    font-size: 13px;
+    color: #4a5568;
+    cursor: pointer;
+    margin-bottom: 14px;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .speak-btn:active {
+    background: rgba(200,210,230,0.6);
+  }
+
+  .speak-btn.speaking {
+    background: rgba(180,200,230,0.7);
+    animation: speakPulse 1.2s ease-in-out infinite;
+  }
+
+  @keyframes speakPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(100, 140, 200, 0.35); }
+    50% { box-shadow: 0 0 0 10px rgba(100, 140, 200, 0); }
+  }
+
+  /* ---- 人民日报金句 ---- */
+  .quote-box {
+    margin-top: 20px;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 14px;
+    border-left: 3px solid #e53e3e;
+    text-align: left;
+  }
+
+  .quote-label {
+    font-size: 11px;
+    color: #e53e3e;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .quote-label::before {
+    content: "📰";
+    font-size: 12px;
+  }
+
+  .quote-text {
+    font-size: 14px;
+    color: #4a5568;
+    line-height: 1.7;
+    font-style: italic;
+  }
+
+  /* ---- 底部 ---- */
+  .footer {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 11px;
+    color: rgba(0,0,0,0.35);
+    letter-spacing: 1px;
+  }
+
+  /* ---- 自定义背景设置 ---- */
+  .bg-settings {
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  .bg-settings-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255,255,255,0.6);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 12px;
+    padding: 6px 14px;
+    font-size: 12px;
+    color: #718096;
+    cursor: pointer;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .bg-settings-btn:active {
+    background: rgba(200,210,230,0.5);
+  }
+
+  .bg-panel {
+    display: none;
+    margin-top: 8px;
+    padding: 14px;
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 14px;
+    border: 1px solid rgba(0,0,0,0.06);
+  }
+
+  .bg-panel.open {
+    display: block;
+  }
+
+  .bg-panel-label {
+    font-size: 11px;
+    color: #a0aec0;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+
+  .color-presets {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+
+  .color-preset {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  }
+
+  .color-preset:hover {
+    transform: scale(1.1);
+  }
+
+  .color-preset.active {
+    border-color: #4a5568;
+    box-shadow: 0 0 0 2px rgba(74,85,104,0.25);
+  }
+
+  .bg-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .bg-action-btn {
+    background: rgba(255,255,255,0.8);
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 10px;
+    padding: 6px 12px;
+    font-size: 11px;
+    color: #718096;
+    cursor: pointer;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .bg-action-btn:active {
+    background: rgba(200,210,230,0.5);
+  }
+
+  .bg-action-btn.reset-btn {
+    color: #e53e3e;
+    border-color: rgba(229,62,62,0.2);
+  }
+
+  .loading {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  @media (max-width: 380px) {
+    .main-card { padding: 24px 16px 22px; }
+    .title { font-size: 19px; letter-spacing: 3px; }
+    .temperature { font-size: 40px; }
+    .weather-icon { font-size: 46px; }
+    .fubao-tip { flex: 0 0 76px; width: 76px; padding: 10px 5px; }
+    .fubao-avatar { font-size: 26px; }
+    .fubao-text { font-size: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-layer"></div>
+
+<div class="container">
+  <div class="main-card" id="mainCard">
+    <div class="title">一家三口的云端情书</div>
+    <div class="subtitle">· 每天都是好天气 ·</div>
+
+    <div class="city-row">
+      <input class="city-input" id="cityInput" type="text" placeholder="输入城市名称…">
+      <button class="city-btn" id="searchBtn">🔍 搜索</button>
+      <button class="city-btn" id="locateBtn">📍 定位</button>
+    </div>
+    <div class="city-name" id="cityName">📍 请搜索城市或使用定位</div>
+
+    <button class="speak-btn" id="speakBtn" title="语音播报天气">🔊 语音播报天气</button>
+
+    <!-- 天气主区域：左侧小福宝 + 右侧天气 -->
+    <div class="weather-row">
+      <div class="fubao-tip" id="fubaoTip">
+        <div class="fubao-avatar">🧒</div>
+        <div class="fubao-label">小福宝提示</div>
+        <div class="fubao-text" id="fubaoText">今天也要开开心心呀~</div>
+      </div>
+
+      <div class="weather-right" id="weatherContent">
+        <div class="weather-icon" id="weatherIcon">☁️</div>
+        <div class="temperature" id="temperature">--°</div>
+        <div class="weather-desc" id="weatherDesc">请搜索城市</div>
+      </div>
+    </div>
+
+    <div class="details-row">
+      <div class="detail-item">
+        <div class="detail-label">💧 湿度</div>
+        <div class="detail-value" id="humidity">--</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">🌬 风速</div>
+        <div class="detail-value" id="wind">--</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">🌅 日出</div>
+        <div class="detail-value" id="sunrise">--</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">🌇 日落</div>
+        <div class="detail-value" id="sunset">--</div>
+      </div>
+    </div>
+
+    <div class="quote-box">
+      <div class="quote-label">人民日报 · 今日寄语</div>
+      <div class="quote-text" id="dailyQuote"></div>
+    </div>
+  </div>
+
+  <div class="footer">一家三口 · 有爱的地方就是家 ❤️</div>
+
+  <!-- 自定义背景设置 -->
+  <div class="bg-settings">
+    <button class="bg-settings-btn" id="bgSettingsBtn">⚙️ 自定义背景</button>
+    <div class="bg-panel" id="bgPanel">
+      <div class="bg-panel-label">选择背景颜色</div>
+      <div class="color-presets" id="colorPresets">
+        <span class="color-preset active" data-color="#ffffff" style="background:#ffffff;"></span>
+        <span class="color-preset" data-color="#f5f0e8" style="background:#f5f0e8;"></span>
+        <span class="color-preset" data-color="#e8f0f8" style="background:#e8f0f8;"></span>
+        <span class="color-preset" data-color="#f5e8f0" style="background:#f5e8f0;"></span>
+        <span class="color-preset" data-color="#e8f5e8" style="background:#e8f5e8;"></span>
+        <span class="color-preset" data-color="#faf0e6" style="background:#faf0e6;"></span>
+        <span class="color-preset" data-color="#f0e6fa" style="background:#f0e6fa;"></span>
+        <span class="color-preset" data-color="#e6f0fa" style="background:#e6f0fa;"></span>
+      </div>
+      <div class="bg-actions">
+        <button class="bg-action-btn" id="uploadBgBtn">📷 上传图片</button>
+        <button class="bg-action-btn reset-btn" id="resetBgBtn">↺ 恢复默认</button>
+      </div>
+      <input type="file" id="bgFileInput" accept="image/*" style="display:none;">
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== 人民日报金句库 ==========
+var quotes = [
+  "每一个不曾起舞的日子，都是对生命的辜负。新的一天，加油！",
+  "生活不会辜负每一个努力的人，你只管努力，剩下的交给时间。",
+  "你若盛开，蝴蝶自来；你若精彩，天自安排。",
+  "星光不问赶路人，时光不负有心人。",
+  "没有比脚更长的路，没有比人更高的山。",
+  "心中有阳光，脚下有力量。新的一天，从心出发。",
+  "追光的人，终会光芒万丈。",
+  "世上无难事，只要肯登攀。每一天都是新的起点。",
+  "平凡铸就伟大，英雄来自人民。每个人都了不起！",
+  "路虽远，行则将至；事虽难，做则必成。",
+  "幸福都是奋斗出来的。今天的你，也要元气满满！",
+  "征途漫漫，惟有奋斗。我们一起向未来！",
+  "心有所信，方能行远。不忘初心，方得始终。",
+  "每一个拼搏的日子都闪闪发光，每一段难忘的记忆都温润人心。",
+  "岁月不居，天道酬勤。愿你不负韶华，不负自己。",
+  "不驰于空想，不骛于虚声。脚踏实地，仰望星空。",
+  "山再高，往上攀，总能登顶；路再长，走下去，定能到达。",
+  "把平凡的事情做好就是不平凡，把简单的事情做好就是不简单。",
+  "奋斗是青春最亮丽的底色，行动是青年最有效的磨砺。",
+  "人生没有白走的路，每一步都算数。",
+  "没有一个春天不会到来，没有一个冬天不可逾越。",
+  "长风破浪会有时，直挂云帆济沧海。",
+  "向下扎根，向上生长。耐得住寂寞，才守得住繁华。",
+  "微光成炬，向光而行。愿你成为自己的太阳。",
+  "世界上最快乐的事，莫过于为理想而奋斗。",
+  "不要因为走得太远，而忘记为什么出发。",
+  "道阻且长，行则将至；行而不辍，未来可期。",
+  "日日行，不怕千万里；常常做，不怕千万事。",
+  "志之所趋，无远弗届；穷山距海，不能限也。",
+  "少年负壮气，奋烈自有时。愿你永远年轻，永远热泪盈眶。",
+  "人生万事须自为，跬步江山即寥廓。",
+  "日拱一卒无有尽，功不唐捐终入海。",
+];
+
+function getDailyQuote() {
+  var today = new Date();
+  var seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+  return quotes[seed % quotes.length];
+}
+
+document.getElementById("dailyQuote").textContent = getDailyQuote();
+
+// ========== 天气图标映射 ==========
+var weatherCodeMap = {
+  0:  { icon: "☀️", desc: "晴天" },
+  1:  { icon: "🌤️", desc: "大部晴朗" },
+  2:  { icon: "⛅", desc: "多云" },
+  3:  { icon: "☁️", desc: "阴天" },
+  45: { icon: "🌫️", desc: "雾" },
+  48: { icon: "🌫️", desc: "雾凇" },
+  51: { icon: "🌦️", desc: "小毛毛雨" },
+  53: { icon: "🌦️", desc: "毛毛雨" },
+  55: { icon: "🌧️", desc: "大毛毛雨" },
+  56: { icon: "🌧️", desc: "冻毛毛雨" },
+  57: { icon: "🌧️", desc: "冻毛毛雨" },
+  61: { icon: "🌦️", desc: "小雨" },
+  63: { icon: "🌧️", desc: "中雨" },
+  65: { icon: "🌧️", desc: "大雨" },
+  66: { icon: "🌧️", desc: "冻雨" },
+  67: { icon: "🌧️", desc: "冻雨" },
+  71: { icon: "🌨️", desc: "小雪" },
+  73: { icon: "❄️", desc: "中雪" },
+  75: { icon: "❄️", desc: "大雪" },
+  77: { icon: "🌨️", desc: "雪粒" },
+  80: { icon: "🌦️", desc: "阵雨" },
+  81: { icon: "🌧️", desc: "中阵雨" },
+  82: { icon: "⛈️", desc: "大阵雨" },
+  85: { icon: "🌨️", desc: "小阵雪" },
+  86: { icon: "❄️", desc: "大阵雪" },
+  95: { icon: "⛈️", desc: "雷暴" },
+  96: { icon: "⛈️", desc: "雷暴+冰雹" },
+  99: { icon: "⛈️", desc: "强雷暴+冰雹" },
+};
+
+function getWeatherInfo(code) {
+  return weatherCodeMap[code] || { icon: "🌤️", desc: "多云" };
+}
+
+// ========== 小福宝温馨提示（根据天气自适应） ==========
+function getFubaoTip(weatherCode, temp, humidity, windSpeed) {
+  var tips = [];
+
+  // 根据天气状况
+  if (weatherCode === 0 || weatherCode === 1) {
+    tips.push("阳光正好，出门记得防晒哦~");
+    tips.push("好天气！带宝贝出去走走吧~");
+  } else if (weatherCode === 2) {
+    tips.push("多云天气，体感舒适~");
+    tips.push("不冷不热，正是好时光！");
+  } else if (weatherCode === 3) {
+    tips.push("阴天也要保持好心情~");
+    tips.push("云层厚厚，适合宅家温馨时光~");
+  } else if (weatherCode >= 45 && weatherCode <= 48) {
+    tips.push("有雾，开车要慢行注意安全~");
+    tips.push("雾天出行，记得开雾灯哦~");
+  } else if ((weatherCode >= 51 && weatherCode <= 57) || (weatherCode >= 61 && weatherCode <= 65)) {
+    tips.push("下雨啦，记得带伞出门~");
+    tips.push("雨天路滑，走路小心脚下~");
+  } else if (weatherCode >= 66 && weatherCode <= 67) {
+    tips.push("冻雨天气，路面易结冰~");
+    tips.push("注意保暖防滑，小心出行~");
+  } else if (weatherCode >= 71 && weatherCode <= 77) {
+    tips.push("下雪啦！注意保暖防寒~");
+    tips.push("雪天路滑，走路要慢行~");
+  } else if (weatherCode >= 80 && weatherCode <= 82) {
+    tips.push("阵雨说来就来，随身带伞~");
+    tips.push("阵雨过后也许有彩虹哦~");
+  } else if (weatherCode >= 85 && weatherCode <= 86) {
+    tips.push("阵雪飘飘，穿暖和些~");
+    tips.push("雪花飞舞，浪漫又寒冷~");
+  } else if (weatherCode >= 95) {
+    tips.push("雷暴天气，尽量待在室内~");
+    tips.push("打雷时远离电器和窗户哦~");
+  }
+
+  // 根据温度补充
+  if (temp !== undefined) {
+    if (temp >= 35) {
+      tips.push("高温预警！多喝水防中暑~");
+    } else if (temp >= 30) {
+      tips.push("天气较热，注意补充水分~");
+    } else if (temp <= 0) {
+      tips.push("天寒地冻，裹紧小棉袄！");
+    } else if (temp <= 10) {
+      tips.push("气温偏低，记得穿暖和些~");
+    }
+  }
+
+  // 根据湿度补充
+  if (humidity !== undefined && humidity >= 90) {
+    tips.push("湿度大，衣服可能不易干~");
+  }
+
+  // 根据风速补充
+  if (windSpeed !== undefined && windSpeed >= 30) {
+    tips.push("风大，注意高空坠物~");
+  }
+
+  // 随机选一条
+  if (tips.length === 0) {
+    tips.push("今天也要开开心心呀~");
+  }
+  return tips[Math.floor(Math.random() * tips.length)];
+}
+
+// ========== 语音播报 ==========
+var currentWeatherText = "";
+var isSpeaking = false;
+
+function speakWeather() {
+  if (!currentWeatherText) return;
+  if (isSpeaking) {
+    window.speechSynthesis.cancel();
+    isSpeaking = false;
+    document.getElementById("speakBtn").classList.remove("speaking");
+    document.getElementById("speakBtn").innerHTML = "🔊 语音播报天气";
+    return;
+  }
+
+  var utterance = new SpeechSynthesisUtterance(currentWeatherText);
+  utterance.lang = "zh-CN";
+  utterance.rate = 0.9;
+  utterance.pitch = 1.1;
+
+  utterance.onstart = function() {
+    isSpeaking = true;
+    document.getElementById("speakBtn").classList.add("speaking");
+    document.getElementById("speakBtn").innerHTML = "🔇 停止播报";
+  };
+
+  utterance.onend = function() {
+    isSpeaking = false;
+    document.getElementById("speakBtn").classList.remove("speaking");
+    document.getElementById("speakBtn").innerHTML = "🔊 语音播报天气";
+  };
+
+  utterance.onerror = function() {
+    isSpeaking = false;
+    document.getElementById("speakBtn").classList.remove("speaking");
+    document.getElementById("speakBtn").innerHTML = "🔊 语音播报天气";
+  };
+
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
+}
+
+document.getElementById("speakBtn").addEventListener("click", speakWeather);
+
+// ========== 获取天气 ==========
+function fetchWeather(lat, lon, cityLabel) {
+  var card = document.getElementById("mainCard");
+  card.classList.add("loading");
+
+  var url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon + "&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=sunrise,sunset&timezone=auto&forecast_days=1";
+
+  fetch(url)
+    .then(function(resp) { return resp.json(); })
+    .then(function(data) {
+      var current = data.current;
+      var daily = data.daily;
+      var info = getWeatherInfo(current.weather_code);
+
+      document.getElementById("weatherIcon").textContent = info.icon;
+      document.getElementById("temperature").textContent = Math.round(current.temperature_2m) + "°";
+      document.getElementById("weatherDesc").textContent = info.desc;
+      document.getElementById("humidity").textContent = current.relative_humidity_2m + "%";
+      document.getElementById("wind").textContent = Math.round(current.wind_speed_10m) + " km/h";
+
+      var riseStr = "--";
+      var setStr = "--";
+
+      if (daily && daily.sunrise && daily.sunset) {
+        var rise = new Date(daily.sunrise[0]);
+        var set = new Date(daily.sunset[0]);
+        function fmt(d) { return String(d.getHours()).padStart(2,"0") + ":" + String(d.getMinutes()).padStart(2,"0"); }
+        riseStr = fmt(rise);
+        setStr = fmt(set);
+        document.getElementById("sunrise").textContent = riseStr;
+        document.getElementById("sunset").textContent = setStr;
+      }
+
+      document.getElementById("cityName").textContent = "📍 " + cityLabel;
+
+      // 更新小福宝温馨提示
+      var tip = getFubaoTip(current.weather_code, current.temperature_2m, current.relative_humidity_2m, current.wind_speed_10m);
+      document.getElementById("fubaoText").textContent = tip;
+
+      // 组装播报文本
+      var temp = Math.round(current.temperature_2m);
+      currentWeatherText = cityLabel + "当前天气：" + info.desc + "，气温" + temp + "摄氏度，湿度百分之" + current.relative_humidity_2m + "，风速" + Math.round(current.wind_speed_10m) + "公里每小时。日出时间" + riseStr + "，日落时间" + setStr + "。小福宝温馨提示：" + tip;
+    })
+    .catch(function(e) {
+      document.getElementById("weatherDesc").textContent = "获取天气失败，请重试";
+      currentWeatherText = "";
+      console.error(e);
+    })
+    .finally(function() {
+      card.classList.remove("loading");
+    });
+}
+
+// ========== 城市名 -> 坐标 ==========
+function geocodeCity(cityName) {
+  var url = "https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(cityName) + "&count=1&language=zh&format=json";
+  return fetch(url)
+    .then(function(resp) { return resp.json(); })
+    .then(function(data) {
+      if (data.results && data.results.length > 0) {
+        var r = data.results[0];
+        var label = [r.admin1, r.country].filter(Boolean).join("，");
+        return { lat: r.latitude, lon: r.longitude, label: r.name + (label ? "，" + label : "") };
+      }
+      return null;
+    });
+}
+
+// ========== 搜索城市 ==========
+document.getElementById("searchBtn").addEventListener("click", function() {
+  var city = document.getElementById("cityInput").value.trim();
+  if (!city) return;
+  geocodeCity(city).then(function(geo) {
+    if (geo) {
+      fetchWeather(geo.lat, geo.lon, geo.label);
+    } else {
+      document.getElementById("cityName").textContent = "未找到该城市，请换个关键词试试";
+    }
+  });
+});
+
+document.getElementById("cityInput").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") document.getElementById("searchBtn").click();
+});
+
+// ========== GPS 定位 ==========
+document.getElementById("locateBtn").addEventListener("click", function() {
+  document.getElementById("cityName").textContent = "正在定位…";
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {
+        fetchWeather(pos.coords.latitude, pos.coords.longitude, "当前位置");
+      },
+      function() {
+        document.getElementById("cityName").textContent = "定位失败，请手动搜索城市";
+      },
+      { timeout: 10000 }
+    );
+  } else {
+    document.getElementById("cityName").textContent = "您的浏览器不支持定位，请手动搜索城市";
+  }
+});
+
+// ========== 自定义背景设置 ==========
+(function() {
+  var bgLayer = document.querySelector(".bg-layer");
+  var panel = document.getElementById("bgPanel");
+  var colorPresets = document.querySelectorAll(".color-preset");
+  var fileInput = document.getElementById("bgFileInput");
+
+  // 从 localStorage 恢复背景
+  function loadBgSettings() {
+    var saved = localStorage.getItem("weatherBg");
+    if (!saved) return;
+    try {
+      var cfg = JSON.parse(saved);
+      if (cfg.type === "color") {
+        applyColor(cfg.value);
+        highlightColor(cfg.value);
+      } else if (cfg.type === "image") {
+        applyImage(cfg.value);
+        highlightColor(null);
+      }
+    } catch(e) {}
+  }
+
+  function saveBgSettings(cfg) {
+    localStorage.setItem("weatherBg", JSON.stringify(cfg));
+  }
+
+  function applyColor(color) {
+    bgLayer.classList.remove("bg-image");
+    bgLayer.classList.add("bg-colored");
+    bgLayer.style.setProperty("--custom-bg-color", color);
+  }
+
+  function applyImage(dataUrl) {
+    bgLayer.classList.remove("bg-colored");
+    bgLayer.classList.add("bg-image");
+    bgLayer.style.setProperty("--custom-bg-image", "url(" + dataUrl + ")");
+  }
+
+  function highlightColor(color) {
+    colorPresets.forEach(function(el) {
+      el.classList.toggle("active", el.dataset.color === color);
+    });
+  }
+
+  // 颜色预设点击
+  document.getElementById("colorPresets").addEventListener("click", function(e) {
+    var preset = e.target.closest(".color-preset");
+    if (!preset) return;
+    var color = preset.dataset.color;
+    applyColor(color);
+    highlightColor(color);
+    saveBgSettings({ type: "color", value: color });
+  });
+
+  // 面板开关
+  document.getElementById("bgSettingsBtn").addEventListener("click", function() {
+    panel.classList.toggle("open");
+  });
+
+  // 上传图片
+  document.getElementById("uploadBgBtn").addEventListener("click", function() {
+    fileInput.click();
+  });
+
+  fileInput.addEventListener("change", function() {
+    var file = fileInput.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function() {
+      applyImage(reader.result);
+      highlightColor(null);
+      saveBgSettings({ type: "image", value: reader.result });
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // 恢复默认
+  document.getElementById("resetBgBtn").addEventListener("click", function() {
+    localStorage.removeItem("weatherBg");
+    bgLayer.classList.remove("bg-image", "bg-colored");
+    bgLayer.style.removeProperty("--custom-bg-color");
+    bgLayer.style.removeProperty("--custom-bg-image");
+    highlightColor("#ffffff");
+    colorPresets[0].classList.add("active");
+  });
+
+  loadBgSettings();
+})();
+</script>
+</body>
+</html>
